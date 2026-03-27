@@ -1,0 +1,122 @@
+/* --- 整体容器 --- */
+#gemini-nav-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 270px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  font-family: 'Google Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  max-height: 80vh;
+}
+
+/* --- 头部 --- */
+#gemini-nav-header {
+  background: linear-gradient(135deg, #4285f4, #1967d2);
+  color: white;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: grab;
+  user-select: none;
+}
+
+#gemini-nav-header:active {
+  cursor: grabbing;
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* 按钮样式 */
+.nav-header-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.nav-header-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* --- 列表区域 --- */
+#gemini-nav-list {
+  padding: 8px;
+  max-height: 400px; 
+  overflow-y: auto;
+  background: #fff;
+}
+
+/* --- 列表项 --- */
+.nav-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background-color: #f0f7ff;
+  border-color: #dbeafe;
+}
+
+.nav-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #e8f0fe;
+  color: #1967d2;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  margin-right: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 关键：强制两行显示 */
+.nav-text {
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.4;
+  
+  /* 支持换行 */
+  white-space: normal;
+  
+  /* Webkit 内核截断 (Chrome/Edge) */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  
+  /* 单词打断，防止长单词撑开 */
+  word-break: break-all;
+}

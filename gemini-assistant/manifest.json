@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini助手-导航+导出",
+  "version": "4.0",
+  "description": "集成了对话导航、全量历史回溯、Markdown导出功能。",
+  "permissions": ["activeTab", "downloads"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://aistudio.baidu.com/*",
+        "https://yuanbao.tencent.com/*",
+        "https://aistudio.google.com/*"
+      ],
+      "all_frames": true,
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
