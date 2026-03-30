@@ -1,18 +1,8 @@
 // ================= 配置中心 =================
 const SITE_CONFIGS = {
     'gemini.google.com': {
-        // query: 左侧导航列表提取规则
         query: ['.user-query', 'user-query', '[data-testid="user-query"]', 'h2'],
-        // message: 包含所有对话气泡（用于回溯判定、导出提取、以及寻找滚动容器）
         message: ['user-query', 'model-response', '.message-content', '[data-testid="model-response"]', '.query-container']
-    },
-    'yuanbao.tencent.com': {
-        query: ['.agent-user-content', 'div[class*="UserMessage"]', '.user-message'],
-        message: ['.agent-user-content', 'div[class*="UserMessage"]', 'div[class*="AgentMessage"]', '.agent-content']
-    },
-    'aistudio.baidu.com': {
-        query: ['.conversation-item-user', '.studio-chat-user', 'div[data-role="user"]'],
-        message: ['.conversation-item', '.message-item']
     }
 };
 
@@ -20,37 +10,32 @@ let currentConfig = null;
 let lastUrl = location.href;
 let debounceTimer = null;
 let isProcessing = false;
-// [新增] 标记历史记录是否已经全量加载过
-let isHistoryFullyLoaded = false; 
+let isHistoryFullyLoaded = false;
 
 // ================= 主程序启动 =================
 function initPlugin() {
     detectPlatform();
     createNavContainer();
     
-    // 1. 首次加载
     setTimeout(() => {
         generateNavList();
     }, 1500);
 
-    // 2. 监听 URL 变化
     setInterval(() => {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
             const listDiv = document.getElementById('gemini-nav-list');
             if(listDiv) listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#999;font-size:12px">加载新对话...</div>';
             
-            // [重置状态] 切换对话了，新对话肯定没加载完
             isProcessing = false;
-            isHistoryFullyLoaded = false; 
+            isHistoryFullyLoaded = false;
             
             setTimeout(() => {
                 generateNavList();
             }, 1500);
         }
-    }, 1000); 
+    }, 1000);
 
-    // 3. 监听 DOM 变化
     const observer = new MutationObserver((mutations) => {
         if (isProcessing) return;
 
@@ -75,10 +60,9 @@ function initPlugin() {
 
 function detectPlatform() {
     const host = location.hostname;
-    if (host.includes('gemini')) currentConfig = SITE_CONFIGS['gemini.google.com'];
-    else if (host.includes('yuanbao')) currentConfig = SITE_CONFIGS['yuanbao.tencent.com'];
-    else if (host.includes('baidu')) currentConfig = SITE_CONFIGS['aistudio.baidu.com'];
-    else if (host.includes('google')) currentConfig = SITE_CONFIGS['gemini.google.com'];
+    if (host.includes('gemini') || host.includes('google')) {
+        currentConfig = SITE_CONFIGS['gemini.google.com'];
+    }
 }
 
 // ================= UI 创建 =================
@@ -88,7 +72,6 @@ function createNavContainer() {
     const container = document.createElement('div');
     container.id = 'gemini-nav-container';
     
-    // 头部
     const header = document.createElement('div');
     header.id = 'gemini-nav-header';
     header.innerHTML = '<span>🚀 导航+导出</span>';
@@ -96,10 +79,9 @@ function createNavContainer() {
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'header-actions';
 
-    // 按钮 1：全量加载 (⚡)
     const loadAllBtn = document.createElement('button');
     loadAllBtn.className = 'nav-header-btn';
-    loadAllBtn.innerHTML = '⚡'; 
+    loadAllBtn.innerHTML = '⚡';
     loadAllBtn.title = "加载全部历史";
     loadAllBtn.onclick = (e) => {
         e.stopPropagation();
@@ -107,10 +89,9 @@ function createNavContainer() {
     };
     actionsDiv.appendChild(loadAllBtn);
 
-    // 按钮 2：导出 (📥)
     const exportBtn = document.createElement('button');
     exportBtn.className = 'nav-header-btn';
-    exportBtn.innerHTML = '📥'; 
+    exportBtn.innerHTML = '📥';
     exportBtn.title = "导出 Markdown";
     exportBtn.onclick = (e) => {
         e.stopPropagation();
@@ -118,7 +99,6 @@ function createNavContainer() {
     };
     actionsDiv.appendChild(exportBtn);
 
-    // 按钮 3：折叠/展开
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'nav-header-btn';
     toggleBtn.innerHTML = '➖';
@@ -129,10 +109,9 @@ function createNavContainer() {
     };
     actionsDiv.appendChild(toggleBtn);
 
-    // 按钮 4：滚至最新
     const toBottomBtn = document.createElement('button');
     toBottomBtn.className = 'nav-header-btn';
-    toBottomBtn.innerHTML = '⬇️'; 
+    toBottomBtn.innerHTML = '⬇️';
     toBottomBtn.title = "滚至最新";
     toBottomBtn.onclick = (e) => {
         e.stopPropagation();
@@ -153,15 +132,11 @@ function createNavContainer() {
 }
 
 // ================= 核心：回溯历史与导出 =================
-
-// 流程 A: 点击闪电 (只加载，不导出)
 async function processHistoryAndRefresh() {
     if (isProcessing) return;
     
-    // 如果已经加载过了，可以提示一下，或者选择重新检测（这里选择不再强制滚）
     if (!isHistoryFullyLoaded) {
         await runBacktracking();
-        // 标记为已加载
         isHistoryFullyLoaded = true;
     } else {
         updateStatus("历史已加载", 1000);
@@ -171,11 +146,9 @@ async function processHistoryAndRefresh() {
     scrollToLatestMessage();
 }
 
-// 流程 B: 点击导出 (如果没加载过就加载，加载过直接导)
 async function processHistoryAndExport() {
     if (isProcessing) return;
 
-    // [核心优化] 只有未加载时才去回溯
     if (!isHistoryFullyLoaded) {
         await runBacktracking();
         isHistoryFullyLoaded = true;
@@ -184,7 +157,6 @@ async function processHistoryAndExport() {
     }
     
     updateStatus("正在提取数据...");
-    // 稍微等一下让 DOM 稳定
     await new Promise(r => setTimeout(r, 500));
 
     const chatData = extractMessages();
@@ -202,7 +174,6 @@ async function processHistoryAndExport() {
     setTimeout(() => generateNavList(), 1500);
 }
 
-// 执行回溯动画
 async function runBacktracking() {
     isProcessing = true;
     const listDiv = document.getElementById('gemini-nav-list');
@@ -212,7 +183,6 @@ async function runBacktracking() {
     isProcessing = false;
 }
 
-// 循环滚动直到顶部
 async function scrollUntilTop(statusCallback) {
     let round = 1;
     let maxRetries = 100;
@@ -224,7 +194,7 @@ async function scrollUntilTop(statusCallback) {
 
         if (statusCallback) statusCallback(round);
 
-        triggerScrollTop(); // 触发页面加载
+        triggerScrollTop();
 
         await new Promise(r => setTimeout(r, 2000));
 
@@ -260,7 +230,6 @@ function getFirstVisibleMessage() {
     return null;
 }
 
-// 辅助：触发顶部加载（用于回溯）
 function triggerScrollTop() {
     const main = document.querySelector('main');
     if (main) main.scrollTop = 0;
@@ -272,13 +241,11 @@ function triggerScrollTop() {
 
     const firstMsg = getFirstVisibleMessage();
     if (firstMsg) {
-        firstMsg.scrollIntoView({ behavior: 'auto', block: 'end' }); 
+        firstMsg.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
 }
 
-// ================= 修复版：滚到底部逻辑 =================
 function scrollToLatestMessage() {
-    // 循藤摸瓜 + 暴力兜底逻辑
     if (!currentConfig) return;
 
     let allMessages = [];
@@ -323,7 +290,6 @@ function extractMessages() {
 
     const uniqueElements = Array.from(new Set(allMessages));
     const visibleElements = uniqueElements.filter(el => el.offsetParent !== null);
-    // 按页面位置排序
     visibleElements.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
     const results = [];
@@ -378,7 +344,7 @@ function generateNavList() {
         const valid = Array.from(found).filter(el => el.innerText && el.innerText.trim().length > 1 && el.offsetParent !== null);
         if (valid.length > 0) {
             messageBlocks = valid;
-            break; 
+            break;
         }
     }
     
@@ -386,7 +352,7 @@ function generateNavList() {
 
     if (messageBlocks.length === 0) return;
 
-    listDiv.innerHTML = ''; 
+    listDiv.innerHTML = '';
 
     messageBlocks.forEach((block, index) => {
         let rawText = block.innerText.trim();
@@ -403,7 +369,7 @@ function generateNavList() {
         item.onclick = () => {
             block.scrollIntoView({ behavior: 'smooth', block: 'center' });
             block.style.transition = "background-color 0.5s";
-            block.style.backgroundColor = "#fff9c4"; 
+            block.style.backgroundColor = "#fff9c4";
             setTimeout(() => { block.style.backgroundColor = ""; }, 1000);
         };
         listDiv.appendChild(item);
@@ -431,7 +397,7 @@ function enableDrag(element, handle) {
         startX = e.clientX;
         startY = e.clientY;
         const rect = element.getBoundingClientRect();
-        element.style.right = 'auto'; 
+        element.style.right = 'auto';
         initialLeft = rect.left;
         initialTop = rect.top;
         element.style.left = initialLeft + 'px';

@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Gemini助手-导航+导出",
-  "version": "4.0",
-  "description": "集成了对话导航、全量历史回溯、Markdown导出功能。",
+  "name": "Gemini导航助手",
+  "version": "5.0",
+  "description": "Gemini对话导航与Markdown导出工具",
   "permissions": ["activeTab", "downloads"],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "content_scripts": [
     {
       "matches": [
-        "https://gemini.google.com/*",
-        "https://aistudio.baidu.com/*",
-        "https://yuanbao.tencent.com/*",
-        "https://aistudio.google.com/*"
+        "https://gemini.google.com/*"
       ],
       "all_frames": true,
       "js": ["content.js"],
